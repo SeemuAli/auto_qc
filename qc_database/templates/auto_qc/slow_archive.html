@@ -1,0 +1,86 @@
+{% extends 'auto_qc/base.html' %}
+{% load static %}
+{% block content %}
+
+
+<br>
+
+
+<table id="run_analysis" class="table table-hover table-bordered">
+
+  <thead>
+	<tr>
+	  <th>ID</th>
+	  <th>Run</th>
+	  <th>Worksheets</th>
+	  <th>Analysis</th>
+	  <th>Pipeline</th>
+	  <th>Start Date</th>
+	  <th>Manual QC</th> 
+	</tr>
+  </thead>
+
+  <tbody>
+	{% for run_analysis in run_analyses %}
+	<tr>
+		<td> {{run_analysis.pk}} </td>
+		<td> {{run_analysis.run.run_id}} </td>
+		<td> {{run_analysis.get_worksheets}} </td>
+		<td> {{run_analysis.analysis_type.analysis_type_id}} </td>
+		<td> {{run_analysis.pipeline.pipeline_id}} </td>
+		<td> {{run_analysis.start_date|date:'Y-m-d'}} </td>
+
+
+		{% if run_analysis.manual_approval == True %}
+		<td class="table-success">
+		 <a href="{% url 'view_run_analysis' pk=run_analysis.pk %}"> 
+				Pass
+		 </a> 
+		</td>
+		
+		{% else %}
+		<td class="table-danger">
+		 <a href="{% url 'view_run_analysis' pk=run_analysis.pk %}"> 
+				Fail
+		 </a> 
+		</td>
+
+
+		{% endif %}
+
+
+
+
+	</tr>
+
+
+
+
+	{% endfor %}
+  </tbody>
+
+
+</table>
+<br>
+<br>
+
+
+<!-- JAVASCRIPT -->
+<script>
+$(document).ready(function(){
+
+	// Inititialise DataTable
+	var table = $('#run_analysis').DataTable({
+		"paging":   true,
+		"ordering": true,
+		"info":     false,
+		"pageLength": 25,
+		"searching": true,
+		"aaSorting": [],
+	});
+
+
+});
+</script>
+
+{% endblock %}

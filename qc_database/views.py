@@ -154,6 +154,16 @@ def view_archived_run_analysis(request):
 
 	return render(request, 'auto_qc/archived_run_analysis.html', {'run_analyses': run_analyses})
 
+@transaction.atomic
+@login_required
+def slow_archive(request):
+	"""
+	View run analyses which are not being watched,
+
+	"""
+	run_analyses = RunAnalysis.objects.filter(watching=False).order_by('-run').select_related('pipeline','analysis_type', 'run')
+
+	return render(request, 'auto_qc/slow_archive.html', {'run_analyses': run_analyses})
 
 @transaction.atomic
 def signup(request):
