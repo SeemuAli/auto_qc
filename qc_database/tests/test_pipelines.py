@@ -1,236 +1,72 @@
 import unittest
-from pipelines import germline_pipelines, fusion_pipelines, nextflow_pipelines, somatic_pipelines
+from pipeline_monitoring.pipelines import *
 
 
-class TestPipelineMonitoring(unittest.TestCase):
+class TestGermlinePipeline(unittest.TestCase):
 
-	def test_germline_enrichment_valid(self):
 
-		results_dir = 'test_data/190520_M02641_0219_000000000-CGJT6/IlluminaTruSightCancer'
-		sample_names = ['19M06586']
+
+	def test_samplecomplete_func(self):
+
+		'''
+		test case: error file deleted in sample directory 19M07251
+		'''
+
+		results_dir = 'test_data/TSC_sampletest/IlluminaTruSightCancer'
+		sample_names = ['19M06586', '19M07039', '19M07040', '19M07041', '19M07048', '19M07084', '19M07089', '19M07098', '19M07121', '19M07162', '19M07167','19M07173', '19M07203', '19M07234', '19M07248','19M07251', '19M07267', '19M07333', '19M07356', '19M07398', '19M07411', '19M07435', '19M07436'] # add all samples lists 
 		run_id = '190520_M02641_0219_000000000-CGJT6'
 
-		germline_enrichment = germline_pipelines.GermlineEnrichment(results_dir = results_dir,
+		germline_enrichment = GermlineEnrichment(results_dir = results_dir,
 											sample_names = sample_names,
 											run_id = run_id
 			)
 
-		sample_complete = germline_enrichment.sample_is_complete('19M06586')
+		sample_complete = germline_enrichment.sample_is_complete('19M07039')
+		noerrorfile = germline_enrichment.sample_is_complete('19M07251')
 
+		print(sample_complete)
 		self.assertEqual(sample_complete, True)
+		self.assertEqual(noerrorfile, False)
+
+ 
+
+
+	def test_samplevalid_func(self):
+
+		'''
+		test case: ensure sample valid function work correctly (no intermediate files: '*_rmdup.bam',
+										 '*_DepthOfCoverage etc.')
+		'''
+
+		results_dir = 'test_data/TSC_sampletest/IlluminaTruSightCancer'
+		sample_names = ['19M06586', '19M07039', '19M07040', '19M07041', '19M07048', '19M07084', '19M07089', '19M07098', '19M07121', '19M07162', '19M07167','19M07173', '19M07203', '19M07234', '19M07248','19M07251', '19M07267', '19M07333', '19M07356', '19M07398', '19M07411', '19M07435', '19M07436'] # add all samples lists 
+		run_id = '190520_M02641_0219_000000000-CGJT6'
+		
+		germline_enrichment = GermlineEnrichment(results_dir = results_dir,
+											sample_names = sample_names,
+											run_id = run_id,
+			sample_not_expected_files = ['*_rmdup.bam', '*_DepthOfCoverage'],
+			sample_expected_files = ['*.bam',
+		 							'*.g.vcf',
+		  							'*_AlignmentSummaryMetrics.txt',
+		  							'*_Contamination.selfSM',
+		  							'*_DepthOfCoverage.gz',
+		  							'*_HsMetrics.txt',
+		  							'*_InsertMetrics.txt',
+		  							'*_MarkDuplicatesMetrics.txt',
+		  								'*_QC.txt']
+			)
 
 		sample_valid = germline_enrichment.sample_is_valid('19M06586')
+		missing_bam = germline_enrichment.sample_is_valid('19M07039') #sample directory missing bam file 
+		depthofcov_file = germline_enrichment.sample_is_valid('19M07411') #sample directory contains *_DepthOfCoverage file
+
+
+		print(sample_valid)
 
 		self.assertEqual(sample_valid, True)
+		self.assertEqual(missing_bam, False)
+		self.assertEqual(depthofcov_file, False)
 
-	def test_somatic_fusion_valid(self):
 
-			results_dir = 'test_data/200731_NB551319_0117_AH7K2TAFX2/RocheSTFusion'
-			sample_names = ['19M80611_zymo']
-			run_id = '200731_NB551319_0117_AH7K2TAFX2-CGJT6'
-
-			somatic_fusion = fusion_pipelines.SomaticFusion(results_dir = results_dir,
-												sample_names = sample_names,
-												run_id = run_id
-				)
-
-			sample_complete = somatic_fusion.sample_is_complete('19M80611_zymo')
-
-			self.assertEqual(sample_complete, True)
-
-			sample_valid = somatic_fusion.sample_is_valid('19M80611_zymo')
-
-			self.assertEqual(sample_valid, True)
-
-
-	
-	def test_somatic_enrichment_valid(self):
-
-
-
-			#run without sample 3
-			results_dir = 'test_data/run1/RochePanCancer'
-			sample_names = ['sample1', 'sample2']
-			run_id = 'run1'
-
-			somatic_enrichment = somatic_pipelines.SomaticEnrichment(results_dir = results_dir,
-												sample_names = sample_names,
-												run_id = run_id
-				)
-
-
-			#sample1
-
-			sample_complete = somatic_enrichment.sample_is_complete('sample1')
-
-			self.assertEqual(sample_complete, True)
-
-			sample_valid = somatic_enrichment.sample_is_valid('sample1')
-
-			self.assertEqual(sample_valid, True)
-
-
-			#sample2
-			sample_complete = somatic_enrichment.sample_is_complete('sample2')
-
-			self.assertEqual(sample_complete, True)
-
-			sample_valid = somatic_enrichment.sample_is_valid('sample2')
-
-			self.assertEqual(sample_valid, True)
-
-
-			#run without sample 3 valid/complete
-
-			run_complete = somatic_enrichment.run_is_complete()
-
-			self.assertEqual(run_complete, True)
-
-
-
-			run_valid = somatic_enrichment.run_is_valid()
-
-			self.assertEqual(run_valid, True)
-
-
-
-
-
-			#run with sample3
-
-			results_dir = 'test_data/run1/RochePanCancer'
-			sample_names = ['sample1', 'sample2', 'sample3']
-			run_id = 'run1'
-
-			somatic_enrichment = somatic_pipelines.SomaticEnrichment(results_dir = results_dir,
-												sample_names = sample_names,
-												run_id = run_id
-				)
-
-
-
-
-			#sample3
-			sample_complete = somatic_enrichment.sample_is_complete('sample3')
-
-			self.assertEqual(sample_complete, True)
-
-			sample_valid = somatic_enrichment.sample_is_valid('sample3')
-
-			self.assertEqual(sample_valid, True)
-
-
-			#run with sample 3 complete/valid
-			run_complete = somatic_enrichment.run_is_complete()
-
-			self.assertEqual(run_complete, False)
-
-
-
-			run_valid = somatic_enrichment.run_is_valid()
-
-			self.assertEqual(run_valid, False)
-	
-
-	def test_nextflow_germline_valid(self):
-
-
-			results_dir = 'test_data/190916_M00766_0252_000000000-CJMB5/AgilentOGTFH'
-			sample_names = ['na']
-			run_id = '190916_M00766_0252_000000000-CD583'
-
-			nextflow = nextflow_pipelines.NextflowGermlineEnrichment(results_dir = results_dir,
-												sample_names = sample_names,
-												run_id = run_id
-				)
-
-
-			run_valid = nextflow.run_is_valid()
-
-			self.assertEqual(run_valid, True)
-
-
-	def test_nextflow_germline_not_valid(self):
-
-
-			results_dir = 'test_data/190916_M00766_0252_000000000-CJMB5/AgilentOGTFH2'
-			sample_names = ['na']
-			run_id = '190916_M00766_0252_000000000-CD583'
-
-			nextflow = nextflow_pipelines.NextflowGermlineEnrichment(results_dir = results_dir,
-												sample_names = sample_names,
-												run_id = run_id
-				)
-
-
-			run_valid = nextflow.run_is_valid()
-
-			self.assertEqual(run_valid, False)
-	
-	
-	def test_nextflow_germline_tsc(self):
-			
-			results_dir = ''
-			sample_names = ['na']
-			run_id = '210225_NB551415_0194_AHMGV3AFX2'
-			
-			nextflow = nextflow_pipelines.NextflowGermlineEnrichment(results_dir = results_dir, 
-												sample_names = sample_names, 
-												run_id = run_id
-				)
-			
-			run_valid = nextflow.run_is_valid()
-			
-			self.assertEqual(run_valid, False)
-
-	def test_somaticamplicon_101X_valid(self):
-
-
-			results_dir = 'test_data/210823_M00766_0416_000000000-JMTTY/NGHS-101X'
-			sample_names = ['21M15195']
-			run_id = '210823_M00766_0416_000000000-JMTTY'
-
-			somatic_amplicon = somatic_pipelines.SomaticAmplicon(results_dir = results_dir,
-												sample_names = sample_names,
-												run_id = run_id,
-												sample_expected_files = ['*_VariantReport.txt',
-				  														'*.bam',
-				  														'*_DepthOfCoverage.sample_summary',
-				  														'*_QC.txt',
-				  														'*_filtered_meta_annotated.vcf',
-				  														'hotspot_variants',
-				  														'hotspot_coverage'
-				  														],
-				  								run_expected_files = ['*CRM.xlsx']
-
-
-				)
-
-			run_complete = somatic_amplicon.run_is_valid()
-
-			self.assertEqual(run_complete, True)
-
-	def test_somaticamplicon_102X_valid(self):
-
-
-			results_dir = 'test_data/210823_M00766_0416_000000000-JMTTY/NGHS-102X'
-			sample_names = ['21M14838']
-			run_id = '210823_M00766_0416_000000000-JMTTY'
-
-			somatic_amplicon = somatic_pipelines.SomaticAmplicon(results_dir = results_dir,
-												sample_names = sample_names,
-												run_id = run_id,
-												sample_expected_files = ['*_VariantReport.txt',
-                  														'*.bam',
-                  														'*_DepthOfCoverage.sample_summary',
-                  														'*_QC.txt',
-                  														'*_filtered_meta_annotated.vcf'
-                  														],
-                  								run_expected_files = ['*merged_coverage_report.txt',
-                  													'*merged_variant_report.txt',
-                        											]
-				)
-
-			run_complete = somatic_amplicon.run_is_valid()
-
-			self.assertEqual(run_complete, True)
+	def test_runcomplete_func(self):
